@@ -62,6 +62,7 @@
 
 :- use_module(library(debug)).
 :- debug(progress_bar).
+:- debug(progress_bar,"progress_bar pack loaded",[]).
 
 :- multifile prolog:message//1.
 
