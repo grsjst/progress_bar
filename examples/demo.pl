@@ -1,5 +1,5 @@
 
-:- use_module('../prolog/progress_bar.pl').
+:- use_module(progress_bar).
 
 demo_progress_bar :- test_progress_bar(simple,100).
 demo_progress_bar :- test_progress_bar(default,100).
@@ -8,7 +8,6 @@ demo_progress_bar :- test_progress_bar(fancy,100).
 demo_spinner :- test_spinner(simple,100).
 demo_spinner :- test_spinner(default,100).
 demo_spinner :- test_spinner(fancy,100).
-
 
 test_progress_bar(Label,Total) :-
     Sleep is 5 / Total,
