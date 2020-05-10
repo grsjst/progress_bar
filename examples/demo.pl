@@ -5,15 +5,20 @@ demo_progress_bar :- test_progress_bar(simple,100).
 demo_progress_bar :- test_progress_bar(default,100).
 demo_progress_bar :- test_progress_bar(fancy,100).
 
+demo_spinner :- test_spinner(simple,100).
+demo_spinner :- test_spinner(default,100).
+demo_spinner :- test_spinner(fancy,100).
+
+
 test_progress_bar(Label,Total) :-
-    Sleep is 10 / Total,
+    Sleep is 5 / Total,
     get_time(TS),
     forall(
         (between(1,Total,Index),sleep(Sleep)),
         print_message(informational,pb(demo_progress_bar(Label,Index/Total,TS)))).
 
 test_spinner(Label,Total) :-
-    Sleep is 10 / Total,
+    Sleep is 5 / Total,
     get_time(TS),
     forall(
         (between(1,Total,Progress),sleep(Sleep)),
