@@ -1,5 +1,5 @@
 
-:- use_module(progress_bar).
+:- use_module(library(progress_bar)).
 
 demo_progress_bar :- test_progress_bar(simple,100).
 demo_progress_bar :- test_progress_bar(default,100).
