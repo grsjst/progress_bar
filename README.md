@@ -5,12 +5,12 @@ are availe to adapt the visual appearance of the progress-bar (see the pldoc doc
 
 This is what the `simple_progress_bar` looks like
 ```swipl
-% [******************************************************************                                           ][71%]
+% [******************************************************************                                  ][71%]
 ```
 
 and this is `default_progress_bar`
 ```swipl
-% default demo [=============================================>                                          ] 3.47 seconds
+% default demo [=============================================>                                 ] 3.47 seconds
 ```
 
 It is meant to be hooked to the prolog messageing system (see https://www.swi-prolog.org/pldoc/man?predicate=print_message/2).
