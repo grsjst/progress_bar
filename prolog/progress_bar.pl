@@ -1,16 +1,21 @@
 :- module(progress_bar, [
-	simple_spinner//1,
-	default_spinner//2,
-	fancy_spinner//3,
-	spinner//10,
+	simple_spinner//1,			% simple_spinner(+Progress:int) is det.
+	default_spinner//2,			% default_spinner(+Progress:int,TextLeft:text) is det.
+	fancy_spinner//3,			% fancy_spinner(+Progress:int, +TextLeft:text, +TextRight:text) is det.			
+	spinner//10,				% spinner(+Progress:int,
+								%	+SpinLeftLeft:atom,+TextLeft:text,SpinLeftRight:atom,
+								%	+SpinCenterLeft:atom,+TextCenter:text,+SpinCenterRight:atom,
+								%	+SpinRightLeft:atom,+TextRight:text,+SpinRightRight:atom)
 	spinner_end//0,
-	simple_progress_bar//2,
+	simple_progress_bar//2,		% simple_progress_bar(+Index:int, +Total:int) is det.
 	default_progress_bar//4,	% default_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text)
-	fancy_progress_bar//7,
-	progress_bar//12
+	fancy_progress_bar//7,		% fancy_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text,StartText,TodoText:text) is det.
+	progress_bar//12			% progress_bar(+Index:int,+Total:int,+IntroText:text,+OutroText:text,
+								%	+StartMarker:char,+StartText:text,+DoneChar:char,+DoneText:text,
+								%	+TodoText:text,+TodoChar:char,+EndText:text,+EndMarker:char) is det. 
 	]).
 
-/** <module> progress_bar - DCG rules that renders a text-based progress bar, or spinner to indicate progress of a specific predicate
+/** <module> DCG rules that renders a text-based progress bar, or spinner
 
  	progress_bar makes available a DCG rule (e.g. simple_progress_bar, simple_spinner) that is to be used as part of the
  	prolog  messaging system to print the progress of a used defined process (see
@@ -30,7 +35,7 @@
  	rule is called repeatedly (i.e. as part of the user defined loop). Every message  is prefixed with a 'carriage-return
  	only' character ('\r'), which effectively resets the last printed message, and creates the animation effect.
 
- 	##Example
+ 	## Example
 
  	The example below illustrates the use of simple_progress_bar//2 within =user_defined_predicate= to visually portray
  	advancement whilte iterating elements within the forall/2 loop. Within the forall-loop print_message/2 calls the DGC
@@ -53,7 +58,7 @@
 	==
 
 	@author Joost Geurts
-	@licence MIT License	
+	@license MIT License	
 
 */
 
@@ -66,7 +71,8 @@
 
 :- multifile prolog:message//1.
 
-
+%!	spinner(?Id:atom, ?Frames:list(atom)) is nondet.
+%	defines the spinners
 spinner(none,['']).
 spinner(classic,['|','/','—','\\']).
 spinner(mini,['x','+']).
@@ -75,63 +81,8 @@ spinner(dots2,['.  ','.. ','...']).
 spinner(bar,['▁','▃','▄','▅','▆','▇','█','▇','▆','▅','▄','▃']).
 spinner(dqpb,['d', 'q', 'p', 'b']).
 
-test_progress_bar(Label,Total) :-
-    Sleep is 10 / Total,
-    get_time(TS),
-    forall(
-        (between(1,Total,Index),sleep(Sleep)),
-        print_message(informational,pb(demo_progress_bar(Label,Index/Total,TS)))).
 
-test_spinner(Label,Total) :-
-    Sleep is 10 / Total,
-    get_time(TS),
-    forall(
-        (between(1,Total,Progress),sleep(Sleep)),
-        print_message(informational,pb(demo_spinner(Label,Progress,TS)))).
-
-prolog:message(pb(Msg)) --> Msg.
-
-demo_progress_bar(simple,Progress,_) -->
-	{
-		Progress = Index/Total
-	},
-	simple_progress_bar(Index,Total).
-
-demo_progress_bar(default,Progress,TS0) -->
-	{
-		Progress = Index/Total,
-		IntroText = 'default demo ',
-		get_time(TS),RunningTime is TS - TS0, format(string(OutroText)," ~2f seconds",[RunningTime])
-	},
-	default_progress_bar(Index,Total,IntroText,OutroText).
-
-demo_progress_bar(fancy,Progress,TS0) -->
-	{
-		Progress = Index/Total,
-		IntroText = 'fancy demo ',
-		Items = [administration, modernize ,excitement ,valid ,choke ,pigeon ,ministry ,atmosphere ,nominate ,hide ,few ,goalkeeper ,plan ,seminar ,blue ,coma ,incredible ,surprise ,important ,cheat],
-		length(Items,N), 
-		I is Index mod N, nth0(I,Items,Item),(Index < Total -> format(string(StartText),"Processing: \"~w\" ",[Item]) ; StartText = ""),	
-		J is (Index + 1) mod N, nth0(J,Items,Next),(Index < Total ->  format(string(EndText)," Up next: \"~w\" ",[Next]) ; EndText = ""),
-		get_time(TS),RunningTime is TS - TS0, format(string(OutroText)," ~2f seconds",[RunningTime]),
-		Percentage is (Index/Total) * 100, format(string(TodoText)," ~0f%",[Percentage])
-	},
-	fancy_progress_bar(Index,Total,IntroText,OutroText,StartText,TodoText,EndText).
-
-demo_spinner(simple,Progress,_) --> simple_spinner(Progress).
-
-demo_spinner(default,Progress,_) --> default_spinner(Progress,"Busy doing great things ").
-
-demo_spinner(fancy,Progress,TS0) -->
-	{
-		Items = [administration, modernize ,excitement ,valid ,choke ,pigeon ,ministry ,atmosphere ,nominate ,hide ,few ,goalkeeper ,plan ,seminar ,blue ,coma ,incredible ,surprise ,important ,cheat],
-		random_member(Item,Items),
-		get_time(TS),RunningTime is TS - TS0, format(string(TextRight),"[~2f seconds]",[RunningTime]),
-		format(string(TextLeft)," Processing '~w'",[Item])
-	},
-	fancy_spinner(Progress,TextLeft,TextRight).
-
-%!	simple_spinner(+Progress:int) is det.
+%!	simple_spinner(+Progress:int)// is det.
 %	renders a spinner message on the center of the screen-line
 simple_spinner(Progress) --> 
 	{
@@ -147,7 +98,7 @@ simple_spinner(Progress) -->
 	},
 	spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,SpinCenterRight,SpinRightLeft,TextRight,SpinRightRight).
 
-%!	default_spinner(+Progress:int,TextLeft:text) is det.
+%!	default_spinner(+Progress:int,TextLeft:text)// is det.
 %	renders a text message followed by a spinner 
 default_spinner(Progress,TextLeft) --> 
 	{
@@ -162,7 +113,7 @@ default_spinner(Progress,TextLeft) -->
 	},
 	spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,SpinCenterRight,SpinRightLeft,TextRight,SpinRightRight).
 
-%!	fancy_spinner(+Progress:int, +TextLeft:text, +TextRight:text) is det.
+%!	fancy_spinner(+Progress:int, +TextLeft:text, +TextRight:text)// is det.
 %	fancy_spinner renders a (dynamic) message on the left of the screen (including a spinner) and rights-aligned message
 fancy_spinner(Progress,TextLeft,TextRight) --> 
 	{
@@ -179,23 +130,29 @@ fancy_spinner(Progress,TextLeft,TextRight) -->
 %!	spinner(+Progress:int,
 %!		+SpinLeftLeft:atom,+TextLeft:text,SpinLeftRight:atom,
 %!		+SpinCenterLeft:atom,+TextCenter:text,+SpinCenterRight:atom,
-%!		+SpinRightLeft:atom,+TextRight:text,+SpinRightRight:atom)
+%!		+SpinRightLeft:atom,+TextRight:text,+SpinRightRight:atom)// is det.
 %
 %	Generates a spinner message that is meant to be called repeatedly by a task to indicate its progress 
 %	(while its completion cannot be determined ahead of timer, otherwise a progess bar would be more appropriate)
 %
-%	%	The layout of the spinner message is setup according to the following schema:	
+%	The layout of the spinner message is setup according to the following schema:
+%	==	
 %	SLL TL SLR 			SCL TC SCR 			SRL TR SRR 		
-% 
-%	SLL stands for Spinner-Left-Left, TL stands for Text-Left, SLR stands for Spinner-Left-Right
+%	== 
+%
+%	=SLL= stands for Spinner-Left-Left, =TL= stands for Text-Left, =SLR= stands for Spinner-Left-Right
 %	The other abreviation follow the same schema
 %
-%	Progress is an possitive integer that represents advancement of a task (it is assumed to grow 1 with every call)
-%	TL is a left-aligned text,
-%	TC is a center-aligned text,
-% 	TR is a right-aligned text
-%	SLL, SLR, SCL,SCR,SRL and SRR are atoms represent a spinner Id (e.g. 'classic', 'dots', .. ). 
-%	Noting 'none' denotes absence of a spinner
+%	* 	=Progress= 
+%		is an possitive integer that represents advancement of a task (it is assumed to grow 1 with every call)
+%	*	=TL= 
+%		is a left-aligned text,
+%	*	=TC=
+%		is a center-aligned text,
+% 	*	=TR= 
+%		is a right-aligned text
+%	* 	=SLL=, =SLR=, =SCL=,=SCR=,=SRL= and =SRR= 
+%		are atoms represent a spinner Id (e.g. 'classic', 'dots', .. ). Noting 'none' denotes absence of a spinner
 %
 %	As the termination of a spinner us unnknown a newline should be emmited when done, this can be done using end_spinner.
 spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,SpinCenterRight,SpinRightLeft,TextRight,SpinRightRight) --> 
@@ -217,6 +174,8 @@ spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,S
 	full_width_spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,SpinCenterRight,SpinRightLeft,TextRight,SpinRightRight),
 	[flush].
 
+%!	spinner_end// is det.
+%	spinner_end ends the the spinner
 spinner_end --> [nl].
 
 full_width_spinner(Progress,SLL,TL,SLR,SCL,TC,SCR,SRL,TR,SRR) -->
@@ -261,7 +220,7 @@ do_render_spinner(Progress,PosL,SLL,TL,SLR,PosC,SCL,TC,SCR,PosR,SRL,TR,SRR) -->
 	[TabSpec-[Frame_SLL,TL,Frame_SLR,Frame_SCL,TC,Frame_SCR,Frame_SRL,TR,Frame_SRR]].
 
 
-%! simple_progress_bar(+Index:int, +Total:int)
+%! simple_progress_bar(+Index:int, +Total:int)// is det.
 %	simple_progress_bar renders a progress bar, and the percentage completed
 simple_progress_bar(Index,Total) --> 
 	{
@@ -278,7 +237,7 @@ simple_progress_bar(Index,Total) -->
 	},
 	progress_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker).
 
-%! default_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text)
+%! default_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text)// is det.
 %	default_progress_bar renders a progress bar, including an IntroText, OutroText (that may be dynamically updated)
 default_progress_bar(Index,Total,IntroText,OutroText) --> 
 	{
@@ -293,8 +252,8 @@ default_progress_bar(Index,Total,IntroText,OutroText) -->
 	},
 	progress_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker).
 
-%! fancy_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text,StartText,TodoText:text)
-%	default_progress_bar renders a progress bar, including an IntroText, OutroText, StartText and TodoText (that may be dynamically updated)
+%! fancy_progress_bar(+Index:int, +Total:int, IntroText:text,OutroText:text,StartText,TodoText:text, EndText:text)// is det.
+%	fancy_progress_bar renders a progress bar, including an IntroText, OutroText, StartText, TodoText and EndText (that may be dynamically updated)
 fancy_progress_bar(Index,Total,IntroText,OutroText,StartText,TodoText,EndText) -->
 	{
 		StartMarker = '\u2503',		% ┃
@@ -307,23 +266,35 @@ fancy_progress_bar(Index,Total,IntroText,OutroText,StartText,TodoText,EndText) -
 
 %! progress_bar(+Index:int,+Total:int,+IntroText:text,+OutroText:text,
 %!		+StartMarker:char,+StartText:text,+DoneChar:char,+DoneText:text,
-%!		+TodoText:text,+TodoChar:char,+EndText:text,+EndMarker:char) is det. 
+%!		+TodoText:text,+TodoChar:char,+EndText:text,+EndMarker:char)// is det. 
 %	progress_bar renders the progress of a process using the full width of the terminal
 %	where Index represent the current advancement, and Total represent completion. (i.e. Index =< Total) 
 %
 %	The layout of the bar is setup according to the following schema:	
+%	==
 %	Intro [Start+++++++++++++++><---------End] Outro
+%	==
 %
-%	IntroText ("Intro" in the schema) represents the text that is printed before the bar
-%	StartMarker ("[") defined the character used to render the left boundary of the bar
-%	StartText ("Start") is a text printed at the right side of the StartMarker, provided there is sufficient space 
-%	DoneChar ("+") is the charcater used to render the advancement completed
-%	DoneText (">") is a text that is printed (provided there is space) at the left side ('i.e done') of the current advancement
-%	TodoText ("<") is a text that is printed (provided there is space) at the right side (i.e. todo') of the current advancement
-%	TodoChar ("-") is the character used to render the advacement that remains to be made 
-%	EndText ("End") is a text printed at the left side of the EndMarker, provided there is sufficient space
-%	EndMarker ("]") defined the character used to render the right boundary of the bar
-%	OutroText ("Outro") represents the text that is printed after the bar	
+%	* 	=IntroText= (=|'Intro'|= in the schema) 
+%		represents the text that is printed before the bar
+%	*	=StartMarker= (=|'['|=) 
+%		defined the character used to render the left boundary of the bar
+%	*	=StartText= (=|'Start'|=)
+%		is a text printed at the right side of the StartMarker, provided there is sufficient space 
+%	*	=DoneChar= (=|'+'|=)
+%		is the charcater used to render the advancement completed
+%	*	=DoneText= (=|'>'|=) 
+%		is a text that is printed (provided there is space) at the left side ('i.e done') of the current advancement
+%	*	=TodoText= (=|'<'|=) 
+%		is a text that is printed (provided there is space) at the right side (i.e. todo') of the current advancement
+%	*	=TodoChar= (=|'-'|=) 
+%		is the character used to render the advacement that remains to be made 
+%	*	=EndText= (=|'End'|=) 
+%		is a text printed at the left side of the EndMarker, provided there is sufficient space
+%	*	=EndMarker= (=|']'|=) 
+%		defined the character used to render the right boundary of the bar
+%	*	=OutroText= (=|'Outro'|=) 
+%		represents the text that is printed after the bar	
 progress_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker) --> 
 	{
 		must_be(nonneg,Index),
@@ -382,7 +353,7 @@ render_bar(StartPosition,Width,Index,Total,StartMarker,StartText,DoneChar,DoneTe
 %! do_render_bar(
 %!		+StartPosition:int,+DoneWidth:int,+ToDoWidth:int,
 %!		+StartMarker,+StartText:text,+DoneChar:char,+DoneText:text,
-%!		+TodoText:text,+TodoChar:char,+EndText:text, +EndMarker:char)
+%!		+TodoText:text,+TodoChar:char,+EndText:text, +EndMarker:char)// is det.
 %
 %	render_bar does the actual rendering: It generates Template for format/3, and processes the arguments
 %	StartPosition represents the position to start the rendering
