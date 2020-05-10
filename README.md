@@ -3,6 +3,16 @@
 Progress-bar and spinner portray the progress of a user defined process for SWI-Prolog (https://www.swi-prolog.org/). Several options
 are availe to adapt the visual appearance of the progress-bar (see the pldoc documentation for details).
 
+This is what the `simple_progress_bar` looks like
+```swipl
+% [******************************************************************************                                           ][71%]
+```
+
+and this is `default_progress_bar`
+```swipl
+% default demo [=========================================================>                                          ] 3.47 seconds
+```
+
 It is meant to be hooked to the prolog messageing system (see https://www.swi-prolog.org/pldoc/man?predicate=print_message/2).
 
 
