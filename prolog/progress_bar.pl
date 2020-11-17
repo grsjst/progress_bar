@@ -70,6 +70,8 @@
 :- debug(progress_bar,"progress_bar pack loaded",[]).
 
 :- multifile prolog:message//1.
+prolog:message(pb(Msg)) --> Msg.
+
 
 %!	spinner(?Id:atom, ?Frames:list(atom)) is nondet.
 %	defines the spinners
@@ -146,11 +148,11 @@ fancy_spinner(Progress,TextLeft,TextRight) -->
 %	* 	=Progress= 
 %		is an possitive integer that represents advancement of a task (it is assumed to grow 1 with every call)
 %	*	=TL= 
-%		is a left-aligned text,
+%		is a left-aligned text or message,
 %	*	=TC=
-%		is a center-aligned text,
+%		is a center-aligned text or message,
 % 	*	=TR= 
-%		is a right-aligned text
+%		is a right-aligned text or message
 %	* 	=SLL=, =SLR=, =SCL=,=SCR=,=SRL= and =SRR= 
 %		are atoms represent a spinner Id (e.g. 'classic', 'dots', .. ). Noting 'none' denotes absence of a spinner
 %
@@ -160,18 +162,18 @@ spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,S
 		findall(Id,spinner(Id,_),Ids),
 		must_be(nonneg, Progress),
 		must_be(oneof(Ids),SpinLeftLeft),
-		must_be(any,TextLeft),
+		must_be(any,TextLeft), (atomic(TextLeft) -> TextLeftStr = TextLeft ; message_to_string(TextLeft,TextLeftStr)),
 		must_be(oneof(Ids),SpinLeftRight),
 		must_be(oneof(Ids),SpinCenterLeft),
-		must_be(any,TextCenter),
+		must_be(any,TextCenter), (atomic(TextCenter) -> TextCenterStr = TextCenter ; message_to_string(TextCenter,TextCenterStr)),
 		must_be(oneof(Ids),SpinCenterRight),
 		must_be(oneof(Ids),SpinRightLeft),
-		must_be(any,TextRight),
+		must_be(any,TextRight), (atomic(TextRight) -> TextRightStr = TextRight ; message_to_string(TextRight,TextRightStr)),
 		must_be(oneof(Ids),SpinRightRight)
 	},
 	remove_line_content, 
 	prefix_line, 
-	full_width_spinner(Progress,SpinLeftLeft,TextLeft,SpinLeftRight,SpinCenterLeft,TextCenter,SpinCenterRight,SpinRightLeft,TextRight,SpinRightRight),
+	full_width_spinner(Progress,SpinLeftLeft,TextLeftStr,SpinLeftRight,SpinCenterLeft,TextCenterStr,SpinCenterRight,SpinRightLeft,TextRightStr,SpinRightRight),
 	[flush].
 
 %!	spinner_end// is det.
@@ -276,43 +278,45 @@ fancy_progress_bar(Index,Total,IntroText,OutroText,StartText,TodoText,EndText) -
 %	==
 %
 %	* 	=IntroText= (=|'Intro'|= in the schema) 
-%		represents the text that is printed before the bar
+%		represents the text or message that is printed before the bar
 %	*	=StartMarker= (=|'['|=) 
 %		defined the character used to render the left boundary of the bar
 %	*	=StartText= (=|'Start'|=)
-%		is a text printed at the right side of the StartMarker, provided there is sufficient space 
+%		is a text or message printed at the right side of the StartMarker, provided there is sufficient space 
 %	*	=DoneChar= (=|'+'|=)
 %		is the charcater used to render the advancement completed
 %	*	=DoneText= (=|'>'|=) 
-%		is a text that is printed (provided there is space) at the left side ('i.e done') of the current advancement
+%		is a text or message that is printed (provided there is space) at the left side ('i.e done') of the current advancement
 %	*	=TodoText= (=|'<'|=) 
-%		is a text that is printed (provided there is space) at the right side (i.e. todo') of the current advancement
+%		is a text or message that is printed (provided there is space) at the right side (i.e. todo') of the current advancement
 %	*	=TodoChar= (=|'-'|=) 
 %		is the character used to render the advacement that remains to be made 
 %	*	=EndText= (=|'End'|=) 
-%		is a text printed at the left side of the EndMarker, provided there is sufficient space
+%		is a text or message printed at the left side of the EndMarker, provided there is sufficient space
 %	*	=EndMarker= (=|']'|=) 
 %		defined the character used to render the right boundary of the bar
 %	*	=OutroText= (=|'Outro'|=) 
-%		represents the text that is printed after the bar	
+%		represents the text or message that is printed after the bar
+
+% @fixme: IntroText, OutroText,StartText etc should be messages (or strings)	
 progress_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker) --> 
 	{
 		must_be(nonneg,Index),
 		must_be(nonneg,Total),
-        must_be(any,IntroText),
-        must_be(any,OutroText),
+        must_be(any,IntroText), (atomic(IntroText) -> IntroTextStr = IntroText ; message_to_string(IntroText,IntroTextStr)),
+        must_be(any,OutroText), (atomic(OutroText) -> OutroTextStr = OutroText ; message_to_string(OutroText,OutroTextStr)),
 		must_be(char,StartMarker),
-        must_be(any,StartText),
+        must_be(any,StartText), (atomic(StartText) -> StartTextStr = StartText ; message_to_string(StartText,StartTextStr)),
         must_be(char,DoneChar),
-        must_be(any,DoneText),
-        must_be(any,TodoText),
+        must_be(any,DoneText), (atomic(DoneText) -> DoneTextStr = DoneText ; message_to_string(DoneText,DoneTextStr)),
+        must_be(any,TodoText), (atomic(TodoText) -> TodoTextStr = TodoText ; message_to_string(TodoText,TodoTextStr)),
         must_be(char,TodoChar),
-        must_be(any,EndText),
+        must_be(any,EndText), (atomic(EndText) -> EndTextStr = EndText ; message_to_string(EndText,EndTextStr)),
         must_be(char,EndMarker)
 	},
 	remove_line_content,
 	prefix_line,
-	full_width_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker),
+	full_width_bar(Index,Total,IntroTextStr,OutroTextStr,StartMarker,StartTextStr,DoneChar,DoneTextStr,TodoTextStr,TodoChar,EndTextStr,EndMarker),
 	finished(Index,Total).
 
 remove_line_content --> [at_same_line,'\r'].
@@ -325,29 +329,33 @@ finished(_,_) --> [flush].
 full_width_bar(Index,Total,IntroText,OutroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker) --> 
     {
     	tty_size(_,W0),
-        string_length(IntroText,LStart),
-        string_length(OutroText,LEnd),
-        Width is W0 - LStart - LEnd - 5 % '% ' prefix + cursor + StartMarker + EndMarker
-        % debug(progress_bar,"tty:~w, sm:~w, sl:~w, em:~w, el:~w",[W0,IntroText,LStart,EndStr,LEnd])
+        Width is W0 - 2, % '% ' prefix
+        StartPosition = 0 
     },
-    [IntroText],render_bar(0,Width,Index,Total,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker),[OutroText].
+    render_bar(StartPosition,Width,Index,Total,IntroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker,OutroText).
 
-% Renders a bar of Width starting at StartPosition
-render_bar(StartPosition,Width,Index,Total,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker) -->
+% Renders a profress_bar of Width starting at StartPosition
+render_bar(StartPosition,Width,Index,Total,IntroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker,OutroText) -->
     {
     	must_be(nonneg,StartPosition),
         must_be(nonneg,Width),
+        string_length(IntroText,LIntroText),
+        string_length(StartMarker,LStartMarker),
+        string_length(EndMarker,LEndMarker),
+        string_length(OutroText,LOutroText),
+
+        BarWidth is Width - LIntroText - LStartMarker - LEndMarker - LOutroText, 
         (Index == Total -> % for rounding errors
-        	(DoneWidth = Width, TodoWidth = 0) 
+        	(DoneWidth = BarWidth, TodoWidth = 0) 
         	;
         	(
-        		DoneWidth is floor(Index * (Width / Total)),
-        		TodoWidth is Width - DoneWidth
+        		DoneWidth is floor(Index * (BarWidth / Total)),
+        		TodoWidth is BarWidth - DoneWidth
         	)
         )
-        % debug(progress_bar,"progress:~w, width:~w, DoneWidth:~w, TodoWidth:~w",[Index/Total,Width,DoneWidth,TodoWidth])
+        %debug(progress_bar,"progress:~w, Width:~w, BarWidth:~w, DoneWidth:~w, TodoWidth:~w",[Index/Total,Width,BarWidth,DoneWidth,TodoWidth])
     },
-    do_render_bar(StartPosition,DoneWidth,TodoWidth,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker).
+    do_render_bar(StartPosition,DoneWidth,TodoWidth,IntroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker,OutroText).
 
 
 %! do_render_bar(
@@ -359,24 +367,95 @@ render_bar(StartPosition,Width,Index,Total,StartMarker,StartText,DoneChar,DoneTe
 %	StartPosition represents the position to start the rendering
 %	DoneWidth represents the length (in characters) of the Done area
 %	TodoWidth represents the length (in characters) of the Todo area   
-do_render_bar(StartPosition,DoneWidth,TodoWidth,StartMarker,StartText0,DoneChar,DoneText0,TodoText0,TodoChar,EndText0,EndMarker) -->
+do_render_bar(StartPosition,DoneWidth,TodoWidth,IntroText,StartMarker,StartText,DoneChar,DoneText,TodoText,TodoChar,EndText,EndMarker,OutroText) -->
     {
         must_be(nonneg,DoneWidth),
         must_be(nonneg,TodoWidth),
-
-        string_length(DoneText0,DoneTextLength),
-        string_length(StartText0,StartTextLength),
-        string_length(EndText0,EndTextLength),
-        string_length(TodoText0,TodoTextLength),
-        ((DoneTextLength >= DoneWidth ; TodoWidth == 0) -> DoneText = '' ; DoneText = DoneText0),
-        (DoneTextLength + StartTextLength >= DoneWidth -> StartText = '' ; StartText = StartText0),
-        (TodoTextLength >= TodoWidth -> TodoText = '' ; TodoText = TodoText0),
-        (TodoTextLength + EndTextLength >= TodoWidth -> EndText = '' ; EndText = EndText0),
-        MetaTabSpec = '~~~w|~w~w~~`~wt~w~~~w+~w~~`~wt~w~~~w+~w',
-        format(atom(TabSpec),MetaTabSpec,[StartPosition,StartMarker,StartText,DoneChar,DoneText,DoneWidth,TodoText,TodoChar,EndText,TodoWidth,EndMarker]) 
-        % Example  = '~0|[start~`+t>~100+<~`-tend~48+]',format(Example)
-        % MetaTabSpec = '~~~w|~w~w~~`~wt~w~~~w+~w~~`~wt~w~~~w+~w',TabArgs = [0,'[','start','+','>',100,'<','-','end',48,']'],format(atom(Example2),MetaTabSpec,TabArgs),format(Example2).
-    },
+        progress_text(StartText,DoneWidth,DoneChar,DoneText,TodoText,TodoChar,TodoWidth,EndText,ProgressText),
+        MetaTabSpec = '~~~w|~w~w~w~w~w',
+        format(atom(TabSpec),MetaTabSpec,[StartPosition,IntroText,StartMarker,ProgressText,EndMarker,OutroText]) 
+   },
     [TabSpec].
+
+repeat_string(_,0,"") :- !.
+repeat_string(Str,1,Str) :- !.
+repeat_string(Str,N,Result) :-
+	NN is N - 1,
+	repeat_string(Str,NN,Result0),
+	string_concat(Str,Result0,Result).
+
+reverse_string(Str,StrR) :-	
+	string_codes(Str,Cs),
+	reverse(Cs,CsR),
+	string_codes(StrR,CsR).
+
+super_impose_left(Base,Super,Result) :-
+	super_impose(Base,Super,Result).
+
+super_impose_right(Base,Super,Result) :-
+	reverse_string(Base,BaseR),
+	reverse_string(Super,SuperR),
+	super_impose(BaseR,SuperR,ResultR),
+	reverse_string(ResultR,Result).
+
+super_impose(Base,Super,Result) :-
+	normalise_text(Base,BaseN),
+	normalise_text(Super,SuperN),
+	string_codes(BaseN,BaseCs),
+	string_codes(SuperN,SuperCs),
+	super_impose_codes(BaseCs,SuperCs,ResultCs),
+	string_codes(Result,ResultCs).
+
+super_impose_codes([],[],[]) :- !.
+super_impose_codes(BaseCs,[],BaseCs) :- !.
+super_impose_codes([],SuperCs,SuperCs) :- !.
+
+super_impose_codes([BaseC|BaseCs],[SuperC|SuperCs],[BaseC|ResultCs]) :-
+	code_type(SuperC,white),!,	% @FIXME 
+	super_impose_codes(BaseCs,SuperCs,ResultCs).
+
+super_impose_codes([_|BaseCs],[SuperC|SuperCs],[SuperC|ResultCs]) :-
+	super_impose_codes(BaseCs,SuperCs,ResultCs).
+
+normalise_text(Str,StrN) :-
+	atom_codes(Str, Cs),
+   	phrase(normalise_text(StrN), Cs, []).
+
+ %% normalise input
+normalise_text(Text) --> normalise_chars(Cs),{atom_codes(Text,Cs)}.
+normalise_chars(NCs) --> normalise_char(C), normalise_chars(Cs),!,{append(C,Cs,NCs)}.
+normalise_chars([]) --> !.
+
+normalise_char(Cs) --> "\t",{atom_codes("   ",Cs)},!.
+normalise_char(Cs) --> "\r",{atom_codes("",Cs)},!.
+normalise_char(Cs) --> "\f",{atom_codes("",Cs)},!.
+normalise_char(Cs) --> "\240",{atom_codes(" ",Cs)},!. % non-breaking space
+
+normalise_char([C]) --> [C],!.
+
+progress_text(StartText,DoneWidth,DoneChar,DoneText,TodoText,TodoChar,TodoWidth,EndText,ProgressText) :-
+	done_bar(DoneWidth,DoneChar,DoneText,DoneBar),
+	todo_bar(TodoWidth,TodoChar,TodoText,TodoBar),
+	string_concat(DoneBar,TodoBar,Bar0),
+	super_impose(Bar0,StartText,Bar1),
+	super_impose_right(Bar1,EndText,ProgressText).
+
+todo_bar(TodoWidth,TodoChar,TodoText,TodoBar) :-
+	reverse_string(TodoText,RTodoText),
+	done_bar(TodoWidth,TodoChar,RTodoText,RTodoBar),
+	reverse_string(RTodoBar,TodoBar).
+
+done_bar(DoneWidth,_DoneChar,DoneText,DoneBar) :-
+	string_length(DoneText,N),
+	DoneWidth =< N,!,
+	sub_string(DoneText, _, DoneWidth, 0, DoneBar).
+
+done_bar(DoneWidth,DoneChar,DoneText,DoneBar) :-
+	string_length(DoneText,N),
+	DoneN is DoneWidth - N,
+	repeat_string(DoneChar,DoneN,DoneChars),
+	string_concat(DoneChars,DoneText,DoneBar).
+
+
 
 
