@@ -9,6 +9,9 @@ demo_spinner :- test_spinner(simple,100).
 demo_spinner :- test_spinner(default,100).
 demo_spinner :- test_spinner(fancy,100).
 
+:- multifile
+    prolog:message//1.
+
 test_progress_bar(Label,Total) :-
     Sleep is 5 / Total,
     get_time(TS),
@@ -35,7 +38,7 @@ demo_progress_bar(default,Progress,TS0) -->
 	{
 		Progress = Index/Total,
 		IntroText = 'default demo ',
-		get_time(TS),RunningTime is TS - TS0, format(string(OutroText)," ~2f seconds",[RunningTime])
+		OutroText = pb(running_time(TS0))
 	},
 	default_progress_bar(Index,Total,IntroText,OutroText).
 
@@ -51,6 +54,8 @@ demo_progress_bar(fancy,Progress,TS0) -->
 		Percentage is (Index/Total) * 100, format(string(TodoText)," ~0f%",[Percentage])
 	},
 	fancy_progress_bar(Index,Total,IntroText,OutroText,StartText,TodoText,EndText).
+
+running_time(TS0) --> {get_time(TS),RunningTime is TS - TS0},[" ~2f seconds" - [RunningTime]].
 
 demo_spinner(simple,Progress,_) --> simple_spinner(Progress).
 
